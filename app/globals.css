@@ -1,0 +1,28 @@
+/* Tailwind CSS 的三个核心指令 */
+@tailwind base;       /* 基础样式重置 */
+@tailwind components; /* 组件样式 */
+@tailwind utilities;  /* 工具类 */
+
+/* 自定义全局样式 */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  /* 字体平滑 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}

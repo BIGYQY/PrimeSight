@@ -1,0 +1,32 @@
+# 依赖包
+/node_modules
+
+# Next.js 构建输出
+/.next/
+/out/
+
+# 生产环境构建
+/build
+
+# 环境变量文件（里面可能有密钥，不能上传！）
+.env
+.env*.local
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# TypeScript 缓存
+*.tsbuildinfo
+next-env.d.ts

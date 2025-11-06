@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    // 编译目标：ES2017（支持 async/await 等现代语法）
+    "target": "ES2017",
+    // 使用的库：DOM API + ES2017
+    "lib": ["dom", "dom.iterable", "esnext"],
+    // 允许使用 JS 文件
+    "allowJs": true,
+    // 跳过类型检查（加快编译速度）
+    "skipLibCheck": true,
+    // 严格模式：开启所有类型检查
+    "strict": true,
+    // 不生成编译后的文件（Next.js 会处理）
+    "noEmit": true,
+    // 使用 ES Module 互操作
+    "esModuleInterop": true,
+    // 模块系统：ESNext（最新的 import/export）
+    "module": "esnext",
+    // 模块解析策略：Bundler（适合打包工具）
+    "moduleResolution": "bundler",
+    // 允许导入 JSON 文件
+    "resolveJsonModule": true,
+    // 每个文件都是独立模块
+    "isolatedModules": true,
+    // 使用 JSX（React 语法）
+    "jsx": "preserve",
+    // 启用增量编译（加快编译速度）
+    "incremental": true,
+    // 路径别名：@ 代表根目录
+    "paths": {
+      "@/*": ["./*"]
+    },
+    // Next.js 的插件
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  // 包含这些文件
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  // 排除这些文件
+  "exclude": ["node_modules"]
+}
