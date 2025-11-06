@@ -15,6 +15,34 @@ const config: Config = {
         primary: "#3B82F6",   // 蓝色
         secondary: "#8B5CF6", // 紫色
       },
+      // 自定义动画
+      animation: {
+        'spin-slow': 'spin 20s linear infinite',      // 慢速旋转（20秒一圈）
+        'spin-reverse': 'spin-reverse 15s linear infinite',  // 反向旋转（15秒一圈）
+        'spin-fast': 'spin 8s linear infinite',       // 快速旋转（8秒一圈）
+        'float': 'float 6s ease-in-out infinite',     // 漂浮动画
+      },
+      // 自定义关键帧动画
+      keyframes: {
+        'spin-reverse': {
+          '0%': { transform: 'rotate(360deg)' },
+          '100%': { transform: 'rotate(0deg)' },
+        },
+        'float': {
+          '0%, 100%': {
+            transform: 'translateY(0) translateX(0)',
+            opacity: '0.2'
+          },
+          '50%': {
+            transform: 'translateY(-20px) translateX(10px)',
+            opacity: '0.5'
+          },
+        },
+      },
+      // 径向渐变背景
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   plugins: [],
