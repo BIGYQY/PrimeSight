@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import EyeLogo from "@/components/EyeLogo";
 
 interface OnboardingModalProps {
@@ -9,6 +10,8 @@ interface OnboardingModalProps {
 }
 
 export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
+  const router = useRouter();
+
   // 当前步骤（1-5）
   const [currentStep, setCurrentStep] = useState(1);
   // 用户选择（登录 or 注册）
@@ -46,6 +49,13 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   const handleClose = () => {
     resetModal();
     onClose();
+  };
+
+  // 完成引导，跳转到 dashboard
+  const handleFinish = () => {
+    resetModal();
+    onClose();
+    router.push('/dashboard'); // 跳转到真正的主页
   };
 
   if (!isOpen) return null;
@@ -292,7 +302,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   </div>
 
                   <button
-                    onClick={handleClose}
+                    onClick={handleFinish}
                     className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-medium"
                   >
                     开始使用 PrimeSight 🚀
