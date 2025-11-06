@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import EyeLogo from "@/components/EyeLogo";
 import AboutModal from "@/components/AboutModal";
+import OnboardingModal from "@/components/OnboardingModal";
 
 // 动态导入背景组件，禁用 SSR（服务端渲染）
 // 这样就不会有 Hydration 错误了！
@@ -15,6 +16,8 @@ const SpiralBackground = dynamic(
 export default function Home() {
   // 控制"关于我"弹窗的显示状态
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  // 控制"新用户引导"弹窗的显示状态
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   return (
     <>
@@ -46,7 +49,10 @@ export default function Home() {
 
           {/* 按钮组 */}
           <div className="flex gap-4 justify-center">
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/50 hover:scale-105">
+            <button
+              onClick={() => setIsOnboardingOpen(true)} // 点击打开新用户引导
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/50 hover:scale-105"
+            >
               开始使用
             </button>
             <button
@@ -63,6 +69,12 @@ export default function Home() {
       <AboutModal
         isOpen={isAboutOpen}
         onClose={() => setIsAboutOpen(false)}
+      />
+
+      {/* 新用户引导弹窗 */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
       />
     </>
   );
