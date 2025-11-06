@@ -75,3 +75,66 @@ html {
   -webkit-text-fill-color: transparent;
   animation: shimmer 3s linear infinite, glow 2s ease-in-out infinite;
 }
+
+/* ===== 弹窗动画 ===== */
+
+/* 淡入动画 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 从下往上滑动 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 扫描动画（收款码悬停效果） */
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-scan {
+  animation: scan 2s ease-in-out infinite;
+}
+
+/* ===== 隐藏滚动条 ===== */
+
+/* 隐藏滚动条（但保留滚动功能） */
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE 和 Edge */
+  -ms-overflow-style: none;
+}
+
+/* Webkit 浏览器（Chrome, Safari, Edge） */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+
