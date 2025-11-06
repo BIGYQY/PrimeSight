@@ -96,7 +96,7 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 </ul>
 
                 <p className="text-sm text-white/50 italic border-l-4 border-blue-500 pl-4 py-2 bg-white/5 rounded">
-                  🧐 关于我的故事：我目前没有故事！因为还只是一个毫不起眼的小人物，但是我根本不在乎！因为以后I'll improve everything！
+                  🧐 关于我的故事：我目前没有故事！因为还只是一个毫不起眼的小人物，但是我根本不在乎！因为以后I&apos;ll improve everything！
 
                   🫡 我的同伴：克劳德，我最强的助手，我最锋利的矛😤
                 </p>

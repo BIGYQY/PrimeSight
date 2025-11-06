@@ -31,7 +31,7 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
       {/* 右侧导航栏 */}
       <aside className="w-64 bg-slate-800 border-l border-white/10 flex flex-col shadow-2xl">
         {/* 顶部用户信息 */}
-        <div className="p-4 border-b border-white/10">
+        <div className="p-4 border-b border-white/10 relative">
           <button
             onClick={() => setShowUserCard(!showUserCard)}
             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-all duration-300 group"
@@ -60,6 +60,52 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
               ▼
             </div>
           </button>
+
+          {/* 用户信息弹出卡片 - 在按钮下方 */}
+          {showUserCard && (
+            <div
+              className="absolute top-full left-4 right-4 mt-2 z-50 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slide-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 卡片顶部 - 用户信息 */}
+              <div className="p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-white/10">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg">
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">{user.name}</h3>
+                    <p className="text-white/60 text-sm">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 卡片内容 */}
+              <div className="p-4 space-y-2">
+                <button className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3">
+                  <span className="text-xl">👤</span>
+                  <span>个人资料</span>
+                </button>
+
+                <button className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3">
+                  <span className="text-xl">⚙️</span>
+                  <span>设置</span>
+                </button>
+
+                <div className="border-t border-white/10 my-2"></div>
+
+                {/* 退出登录 */}
+                <button className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/20 rounded-lg transition-all flex items-center gap-3">
+                  <span className="text-xl">🚪</span>
+                  <span>退出登录</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 导航项列表 */}
@@ -87,58 +133,6 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
           </div>
         </div>
       </aside>
-
-      {/* 用户信息弹出卡片 */}
-      {showUserCard && (
-        <>
-          {/* 遮罩 */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowUserCard(false)}
-          />
-
-          {/* 卡片 - 定位在头像下方 */}
-          <div className="fixed top-20 right-4 z-50 w-72 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slide-up">
-            {/* 卡片顶部 - 用户信息 */}
-            <div className="p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-white/10">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg">
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg">{user.name}</h3>
-                  <p className="text-white/60 text-sm">{user.email}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 卡片内容 */}
-            <div className="p-4 space-y-2">
-              <button className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3">
-                <span className="text-xl">👤</span>
-                <span>个人资料</span>
-              </button>
-
-              <button className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3">
-                <span className="text-xl">⚙️</span>
-                <span>设置</span>
-              </button>
-
-              <div className="border-t border-white/10 my-2"></div>
-
-              {/* 退出登录 */}
-              <button className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/20 rounded-lg transition-all flex items-center gap-3">
-                <span className="text-xl">🚪</span>
-                <span>退出登录</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }
