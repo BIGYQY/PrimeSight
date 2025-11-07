@@ -25,8 +25,8 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   // 错误信息（如果登录/注册失败）
   const [error, setError] = useState("");
 
-  // 总步骤数（增加了邮箱确认提示步骤）
-  const totalSteps = 6;
+  // 总步骤数（合并邮箱密码步骤）
+  const totalSteps = 5;
 
   // 下一步
   const nextStep = () => {
@@ -39,6 +39,28 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  /**
+   * 处理 Enter 键提交
+   */
+  const handleKeyPress = (e: React.KeyboardEvent, currentField: 'email' | 'password') => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (currentField === 'email') {
+        // 在邮箱输入框按 Enter，聚焦到密码框
+        const passwordInput = document.getElementById('password-input') as HTMLInputElement;
+        if (passwordInput) {
+          passwordInput.focus();
+        }
+      } else if (currentField === 'password') {
+        // 在密码输入框按 Enter，提交表单
+        if (validateEmail(email) && password.length >= 6) {
+          handleAuth();
+        }
+      }
     }
   };
 
@@ -117,12 +139,12 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
           // 关键：检查是否需要邮箱确认
           if (data.session === null) {
             // session 为 null，说明需要邮箱确认
-            // 跳转到"等待邮箱确认"页面（步骤5）
-            setCurrentStep(5);
+            // 跳转到"等待邮箱确认"页面（步骤4）
+            setCurrentStep(4);
           } else {
             // session 不为 null，说明注册并自动登录成功
-            // 跳转到"注册成功"页面（步骤6）
-            setCurrentStep(6);
+            // 跳转到"注册成功"页面（步骤5）
+            setCurrentStep(5);
           }
         }
       } else {
@@ -137,9 +159,9 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
           setError(translateError(error.message));
           console.error("登录错误:", error);
         } else {
-          // 登录成功！进入最后一步
+          // 登录成功！进入最后一步（步骤5）
           console.log("登录成功:", data);
-          setCurrentStep(6);
+          setCurrentStep(5);
         }
       }
     } catch (err) {
@@ -190,6 +212,17 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
         <div
           className="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl shadow-2xl max-w-3xl w-full pointer-events-auto animate-slide-up border border-white/10 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
+          onKeyPress={(e) => {
+            // 在步骤1（欢迎界面）和步骤5（完成界面）按 Enter 继续
+            if (e.key === 'Enter') {
+              if (currentStep === 1) {
+                nextStep();
+              } else if (currentStep === 5) {
+                handleFinish();
+              }
+            }
+          }}
+          tabIndex={0} // 让 div 可以接收键盘事件
         >
           {/* 顶部进度条 */}
           <div className="h-2 bg-slate-700">
@@ -293,7 +326,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
               </div>
             )}
 
-            {/* 步骤 3：输入邮箱 */}
+            {/* 步骤 3：输入邮箱和密码（合并） */}
             {currentStep === 3 && (
               <div className="flex-1 flex flex-col justify-center animate-slide-up">
                 {/* Logo */}
@@ -307,71 +340,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   {authMode === 'signup' ? '创建账号' : '欢迎回来'}
                 </h2>
                 <p className="text-white/60 text-center mb-8">
-                  请输入你的邮箱地址
-                </p>
-
-                <div className="mb-8">
-                  <label className="block text-white/80 mb-2 text-sm">
-                    邮箱地址
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@gmail.com"
-                    className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 transition-all ${
-                      email && !validateEmail(email)
-                        ? 'border-red-500 focus:ring-red-500'
-                        : 'border-white/30 focus:ring-blue-500'
-                    }`}
-                  />
-                  {/* 邮箱格式错误提示 */}
-                  {email && !validateEmail(email) && (
-                    <p className="text-red-400 text-xs mt-2">
-                      ⚠️ 邮箱格式不正确，请输入有效的邮箱地址
-                    </p>
-                  )}
-                  {/* 邮箱格式正确提示 */}
-                  {email && validateEmail(email) && (
-                    <p className="text-green-400 text-xs mt-2">
-                      ✓ 邮箱格式正确
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={prevStep}
-                    className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all"
-                  >
-                    ← 返回
-                  </button>
-                  <button
-                    onClick={nextStep}
-                    disabled={!email || !validateEmail(email)}
-                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    继续 →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 步骤 4：输入密码 */}
-            {currentStep === 4 && (
-              <div className="flex-1 flex flex-col justify-center animate-slide-up">
-                {/* Logo */}
-                <div className="flex justify-center mb-6">
-                  <div className="scale-75">
-                    <EyeLogo />
-                  </div>
-                </div>
-
-                <h2 className="text-2xl font-bold text-white mb-2 text-center">
-                  设置密码
-                </h2>
-                <p className="text-white/60 text-center mb-8">
-                  {authMode === 'signup' ? '为你的账号设置一个安全密码' : '输入你的密码'}
+                  请输入你的邮箱和密码
                 </p>
 
                 {/* 错误提示 */}
@@ -381,36 +350,91 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   </div>
                 )}
 
-                <div className="mb-8">
-                  <label className="block text-white/80 mb-2 text-sm">
-                    密码
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    disabled={isLoading} // 加载时禁用输入框
-                  />
-                  {authMode === 'signup' && (
-                    <p className="text-white/40 text-xs mt-2">
-                      密码至少 6 位字符
-                    </p>
-                  )}
+                <div className="space-y-4 mb-8">
+                  {/* 邮箱输入框 */}
+                  <div>
+                    <label className="block text-white/80 mb-2 text-sm">
+                      邮箱地址
+                    </label>
+                    <input
+                      id="email-input"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyPress={(e) => handleKeyPress(e, 'email')}
+                      placeholder="example@gmail.com"
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 transition-all ${
+                        email && !validateEmail(email)
+                          ? 'border-red-500 focus:ring-red-500'
+                          : 'border-white/30 focus:ring-blue-500'
+                      }`}
+                      autoFocus
+                    />
+                    {/* 邮箱格式错误提示 */}
+                    {email && !validateEmail(email) && (
+                      <p className="text-red-400 text-xs mt-2">
+                        ⚠️ 邮箱格式不正确，请输入有效的邮箱地址
+                      </p>
+                    )}
+                    {/* 邮箱格式正确提示 */}
+                    {email && validateEmail(email) && (
+                      <p className="text-green-400 text-xs mt-2">
+                        ✓ 邮箱格式正确
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 密码输入框 */}
+                  <div>
+                    <label className="block text-white/80 mb-2 text-sm">
+                      密码
+                    </label>
+                    <input
+                      id="password-input"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyPress={(e) => handleKeyPress(e, 'password')}
+                      placeholder="••••••••"
+                      disabled={isLoading}
+                      className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 transition-all ${
+                        password && password.length < 6
+                          ? 'border-red-500 focus:ring-red-500'
+                          : 'border-white/30 focus:ring-blue-500'
+                      }`}
+                    />
+                    {/* 密码长度不足提示 */}
+                    {password && password.length < 6 && (
+                      <p className="text-red-400 text-xs mt-2">
+                        ⚠️ 密码至少需要6个字符
+                      </p>
+                    )}
+                    {/* 密码长度符合要求 */}
+                    {password && password.length >= 6 && (
+                      <p className="text-green-400 text-xs mt-2">
+                        ✓ 密码格式正确
+                      </p>
+                    )}
+                    {authMode === 'signup' && !password && (
+                      <p className="text-white/40 text-xs mt-2">
+                        密码至少 6 位字符
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-3">
                   <button
                     onClick={prevStep}
                     className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all"
-                    disabled={isLoading} // 加载时禁用按钮
+                    disabled={isLoading}
                   >
                     ← 返回
                   </button>
                   <button
-                    onClick={handleAuth} // 调用真实的登录/注册函数！
-                    disabled={!password || password.length < 6 || isLoading} // 加载时禁用
+                    onClick={handleAuth}
+                    disabled={!validateEmail(email) || password.length < 6 || isLoading}
                     className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
@@ -428,8 +452,8 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
               </div>
             )}
 
-            {/* 步骤 5：等待邮箱确认 */}
-            {currentStep === 5 && (
+            {/* 步骤 4：等待邮箱确认 */}
+            {currentStep === 4 && (
               <div className="flex-1 flex flex-col justify-center animate-slide-up">
                 <div className="text-center">
                   {/* Logo */}
@@ -462,9 +486,9 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   <div className="space-y-3">
                     <button
                       onClick={() => {
-                        // 跳转到登录步骤
+                        // 直接跳转到步骤3（登录界面）
                         setAuthMode('login');
-                        setCurrentStep(2);
+                        setCurrentStep(3); // 直接到输入邮箱密码的界面
                       }}
                       className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-medium"
                     >
@@ -482,8 +506,8 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
               </div>
             )}
 
-            {/* 步骤 6：完成（登录成功） */}
-            {currentStep === 6 && (
+            {/* 步骤 5：完成（登录成功） */}
+            {currentStep === 5 && (
               <div className="flex-1 flex flex-col justify-center animate-slide-up">
                 <div className="text-center">
                   {/* Logo */}
