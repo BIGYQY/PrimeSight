@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import EyeLogo from "@/components/EyeLogo";
+import { supabase } from "@/lib/supabase/client"; // 导入 Supabase 客户端
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -19,6 +20,10 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   // 表单数据
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // 加载状态（登录/注册时显示加载动画）
+  const [isLoading, setIsLoading] = useState(false);
+  // 错误信息（如果登录/注册失败）
+  const [error, setError] = useState("");
 
   // 总步骤数
   const totalSteps = 5;
@@ -37,12 +42,68 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
     }
   };
 
+  /**
+   * 处理登录或注册
+   * 这个函数会调用 Supabase 的真实 API
+   */
+  const handleAuth = async () => {
+    // 清空之前的错误信息
+    setError("");
+    // 开始加载
+    setIsLoading(true);
+
+    try {
+      if (authMode === 'signup') {
+        // 注册新用户
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          // 注册失败，显示错误
+          setError(error.message);
+          console.error("注册错误:", error);
+        } else {
+          // 注册成功！进入下一步
+          console.log("注册成功:", data);
+          nextStep();
+        }
+      } else {
+        // 登录已有用户
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          // 登录失败，显示错误
+          setError(error.message);
+          console.error("登录错误:", error);
+        } else {
+          // 登录成功！进入下一步
+          console.log("登录成功:", data);
+          nextStep();
+        }
+      }
+    } catch (err) {
+      // 捕获其他异常错误
+      setError("发生了未知错误，请稍后重试");
+      console.error("认证异常:", err);
+    } finally {
+      // 无论成功失败，都关闭加载状态
+      setIsLoading(false);
+    }
+  };
+
   // 重置状态
   const resetModal = () => {
     setCurrentStep(1);
     setAuthMode(null);
     setEmail("");
     setPassword("");
+    setError(""); // 也要清空错误信息
+    setIsLoading(false); // 重置加载状态
   };
 
   // 关闭并重置
@@ -241,6 +302,13 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   {authMode === 'signup' ? '为你的账号设置一个安全密码' : '输入你的密码'}
                 </p>
 
+                {/* 错误提示 */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                    <p className="text-red-300 text-sm text-center">❌ {error}</p>
+                  </div>
+                )}
+
                 <div className="mb-8">
                   <label className="block text-white/80 mb-2 text-sm">
                     密码
@@ -251,6 +319,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    disabled={isLoading} // 加载时禁用输入框
                   />
                   {authMode === 'signup' && (
                     <p className="text-white/40 text-xs mt-2">
@@ -263,15 +332,25 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   <button
                     onClick={prevStep}
                     className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all"
+                    disabled={isLoading} // 加载时禁用按钮
                   >
                     ← 返回
                   </button>
                   <button
-                    onClick={nextStep}
-                    disabled={!password || password.length < 6}
-                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    onClick={handleAuth} // 调用真实的登录/注册函数！
+                    disabled={!password || password.length < 6 || isLoading} // 加载时禁用
+                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                   >
-                    {authMode === 'signup' ? '创建账号' : '登录'} →
+                    {isLoading ? (
+                      // 加载时显示加载动画
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>{authMode === 'signup' ? '注册中...' : '登录中...'}</span>
+                      </>
+                    ) : (
+                      // 正常显示按钮文字
+                      <span>{authMode === 'signup' ? '创建账号' : '登录'} →</span>
+                    )}
                   </button>
                 </div>
               </div>
