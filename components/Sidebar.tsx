@@ -104,9 +104,9 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
 
   // 导航项配置
   const navItems = [
+    { id: "my-surveys", label: "我的问卷", icon: "📋" },
     { id: "search", label: "查找问卷", icon: "🔍" },
     { id: "completed", label: "完成的问卷", icon: "✅" },
-    { id: "publish", label: "发布问卷", icon: "📝" },
     { id: "support", label: "支持我们", icon: "💖" },
   ];
 

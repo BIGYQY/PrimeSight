@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import SearchSurveys from "@/components/SearchSurveys";
+import MySurveys from "@/components/MySurveys";
 
 export default function DashboardPage() {
-  // 当前激活的导航项
-  const [activeNav, setActiveNav] = useState("search");
+  // 当前激活的导航项 - 默认显示"我的问卷"
+  const [activeNav, setActiveNav] = useState("my-surveys");
 
   return (
     <div className="flex h-screen bg-slate-900 overflow-hidden">
@@ -15,18 +16,13 @@ export default function DashboardPage() {
 
       {/* 主内容区域 */}
       <main className="flex-1 overflow-y-auto">
+        {activeNav === "my-surveys" && <MySurveys />}
+
         {activeNav === "search" && <SearchSurveys />}
 
         {activeNav === "completed" && (
           <div className="p-8">
             <h1 className="text-4xl font-bold text-white mb-8">完成的问卷</h1>
-            <div className="text-white/60">正在开发中...</div>
-          </div>
-        )}
-
-        {activeNav === "publish" && (
-          <div className="p-8">
-            <h1 className="text-4xl font-bold text-white mb-8">发布问卷</h1>
             <div className="text-white/60">正在开发中...</div>
           </div>
         )}
