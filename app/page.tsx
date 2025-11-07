@@ -1,6 +1,6 @@
 "use client"; // 标记这是客户端组件
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import EyeLogo from "@/components/EyeLogo";
@@ -15,7 +15,8 @@ const SpiralBackground = dynamic(
   { ssr: false } // ssr: false = 只在客户端渲染
 );
 
-export default function Home() {
+// 主页面内容组件（需要 useSearchParams）
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -186,5 +187,21 @@ export default function Home() {
         onClose={() => setIsOnboardingOpen(false)}
       />
     </>
+  );
+}
+
+// 默认导出 - 用 Suspense 包裹 HomeContent
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="relative flex min-h-screen flex-col items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-white/70">加载中...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
