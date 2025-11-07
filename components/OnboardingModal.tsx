@@ -25,8 +25,8 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   // 错误信息（如果登录/注册失败）
   const [error, setError] = useState("");
 
-  // 总步骤数
-  const totalSteps = 5;
+  // 总步骤数（增加了邮箱确认提示步骤）
+  const totalSteps = 6;
 
   // 下一步
   const nextStep = () => {
@@ -43,12 +43,59 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
   };
 
   /**
+   * 翻译 Supabase 错误信息为中文
+   */
+  const translateError = (error: string): string => {
+    const errorMap: { [key: string]: string } = {
+      'Invalid login credentials': '邮箱或密码错误，请检查后重试',
+      'Email not confirmed': '邮箱还未确认，请先去邮箱点击确认链接',
+      'User already registered': '该邮箱已被注册，请直接登录',
+      'Invalid email': '邮箱格式不正确，请输入有效的邮箱地址',
+      'Password should be at least 6 characters': '密码至少需要6个字符',
+      'Unable to validate email address: invalid format': '邮箱格式不正确',
+      'Email rate limit exceeded': '发送邮件过于频繁，请稍后再试',
+      'Signups not allowed for this instance': '当前不允许注册新用户',
+    };
+
+    // 查找匹配的错误信息
+    for (const [key, value] of Object.entries(errorMap)) {
+      if (error.includes(key)) {
+        return value;
+      }
+    }
+
+    // 如果没有匹配的，返回原始错误
+    return `发生错误：${error}`;
+  };
+
+  /**
+   * 验证邮箱格式
+   */
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  /**
    * 处理登录或注册
    * 这个函数会调用 Supabase 的真实 API
    */
   const handleAuth = async () => {
     // 清空之前的错误信息
     setError("");
+
+    // 前端验证邮箱格式
+    if (!validateEmail(email)) {
+      setError("邮箱格式不正确，请输入有效的邮箱地址（如：example@gmail.com）");
+      return;
+    }
+
+    // 验证密码长度
+    if (password.length < 6) {
+      setError("密码至少需要6个字符");
+      return;
+    }
+
     // 开始加载
     setIsLoading(true);
 
@@ -61,13 +108,22 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
         });
 
         if (error) {
-          // 注册失败，显示错误
-          setError(error.message);
+          // 注册失败，显示翻译后的错误
+          setError(translateError(error.message));
           console.error("注册错误:", error);
         } else {
-          // 注册成功！进入下一步
-          console.log("注册成功:", data);
-          nextStep();
+          console.log("注册返回数据:", data);
+
+          // 关键：检查是否需要邮箱确认
+          if (data.session === null) {
+            // session 为 null，说明需要邮箱确认
+            // 跳转到"等待邮箱确认"页面（步骤5）
+            setCurrentStep(5);
+          } else {
+            // session 不为 null，说明注册并自动登录成功
+            // 跳转到"注册成功"页面（步骤6）
+            setCurrentStep(6);
+          }
         }
       } else {
         // 登录已有用户
@@ -77,13 +133,13 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
         });
 
         if (error) {
-          // 登录失败，显示错误
-          setError(error.message);
+          // 登录失败，显示翻译后的错误
+          setError(translateError(error.message));
           console.error("登录错误:", error);
         } else {
-          // 登录成功！进入下一步
+          // 登录成功！进入最后一步
           console.log("登录成功:", data);
-          nextStep();
+          setCurrentStep(6);
         }
       }
     } catch (err) {
@@ -262,9 +318,25 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    placeholder="example@gmail.com"
+                    className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 transition-all ${
+                      email && !validateEmail(email)
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-white/30 focus:ring-blue-500'
+                    }`}
                   />
+                  {/* 邮箱格式错误提示 */}
+                  {email && !validateEmail(email) && (
+                    <p className="text-red-400 text-xs mt-2">
+                      ⚠️ 邮箱格式不正确，请输入有效的邮箱地址
+                    </p>
+                  )}
+                  {/* 邮箱格式正确提示 */}
+                  {email && validateEmail(email) && (
+                    <p className="text-green-400 text-xs mt-2">
+                      ✓ 邮箱格式正确
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-3">
@@ -276,7 +348,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
                   </button>
                   <button
                     onClick={nextStep}
-                    disabled={!email}
+                    disabled={!email || !validateEmail(email)}
                     className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     继续 →
@@ -356,8 +428,62 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
               </div>
             )}
 
-            {/* 步骤 5：完成 */}
+            {/* 步骤 5：等待邮箱确认 */}
             {currentStep === 5 && (
+              <div className="flex-1 flex flex-col justify-center animate-slide-up">
+                <div className="text-center">
+                  {/* Logo */}
+                  <div className="flex justify-center mb-4">
+                    <div className="scale-90">
+                      <EyeLogo />
+                    </div>
+                  </div>
+
+                  <div className="text-7xl mb-6">📧</div>
+                  <h2 className="text-3xl font-bold text-white mb-3">
+                    请确认你的邮箱
+                  </h2>
+                  <p className="text-white/70 text-lg mb-8">
+                    我们已经发送了一封确认邮件到：
+                  </p>
+
+                  <div className="bg-white/5 rounded-xl p-4 mb-8 border border-white/10">
+                    <p className="text-white font-semibold text-lg">{email}</p>
+                  </div>
+
+                  <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-4 mb-6">
+                    <p className="text-blue-200 text-sm leading-relaxed">
+                      📬 请打开你的邮箱，点击确认链接<br/>
+                      ⏱️ 邮件可能需要几分钟才能送达<br/>
+                      📂 如果没收到，请检查垃圾邮件文件夹
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        // 跳转到登录步骤
+                        setAuthMode('login');
+                        setCurrentStep(2);
+                      }}
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-medium"
+                    >
+                      ✅ 我已确认邮箱，去登录 →
+                    </button>
+
+                    <button
+                      onClick={handleClose}
+                      className="w-full py-3 bg-white/10 text-white border border-white/30 rounded-lg hover:bg-white/20 transition-all duration-300 font-medium"
+                    >
+                      稍后登录
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 步骤 6：完成（登录成功） */}
+            {currentStep === 6 && (
               <div className="flex-1 flex flex-col justify-center animate-slide-up">
                 <div className="text-center">
                   {/* Logo */}
