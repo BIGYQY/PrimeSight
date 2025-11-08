@@ -136,6 +136,27 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
         } else {
           console.log("注册返回数据:", data);
 
+          // 如果注册成功且有用户数据，创建 profile
+          if (data.user) {
+            // 从邮箱提取默认昵称（邮箱 @ 前面的部分）
+            const defaultDisplayName = email.split('@')[0];
+
+            // 创建用户 profile
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: data.user.id,
+                display_name: defaultDisplayName,
+              });
+
+            if (profileError) {
+              console.error('创建 profile 失败:', profileError);
+              // 不影响注册流程，只记录错误
+            } else {
+              console.log('Profile 创建成功:', defaultDisplayName);
+            }
+          }
+
           // 关键：检查是否需要邮箱确认
           if (data.session === null) {
             // session 为 null，说明需要邮箱确认

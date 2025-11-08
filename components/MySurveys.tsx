@@ -102,6 +102,13 @@ export default function MySurveys() {
   };
 
   /**
+   * 查看统计
+   */
+  const handleStats = (surveyId: string) => {
+    router.push(`/survey-stats/${surveyId}`);
+  };
+
+  /**
    * 格式化日期
    */
   const formatDate = (dateString: string) => {
@@ -188,6 +195,7 @@ export default function MySurveys() {
                       编辑
                     </button>
                     <button
+                      onClick={() => handleStats(survey.id)}
                       className="px-4 py-2 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30 transition-all border border-green-500/30"
                     >
                       统计

@@ -9,7 +9,8 @@ interface CompletedSurvey {
   title: string;
   description: string;
   created_at: string;
-  creator_email: string;
+  creator_id: string;
+  creator_name?: string;
   completed_at: string;
   is_private: boolean;
 }
@@ -72,10 +73,28 @@ export default function CompletedSurveys() {
           return;
         }
 
-        // 4. 合并数据，添加完成时间
+        // 4. 获取所有创建者的 profiles
+        const creatorIds = [...new Set(surveysData?.map(s => s.creator_id) || [])];
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', creatorIds);
+
+        if (profilesError) {
+          console.error('获取 profiles 失败:', profilesError);
+        }
+
+        // 创建 creatorId -> displayName 的映射
+        const profilesMap: Record<string, string> = {};
+        (profilesData || []).forEach(profile => {
+          profilesMap[profile.user_id] = profile.display_name;
+        });
+
+        // 5. 合并数据，添加完成时间和创建者昵称
         const completedSurveysWithTime = (surveysData || []).map(survey => ({
           ...survey,
           completed_at: uniqueSurveyIds.get(survey.id) || survey.created_at,
+          creator_name: profilesMap[survey.creator_id] || '未知用户',
         }));
 
         // 按完成时间排序
@@ -174,7 +193,7 @@ export default function CompletedSurveys() {
                       <p className="text-white/60 mb-3 line-clamp-2">{survey.description}</p>
                     )}
                     <div className="flex items-center gap-4 text-sm text-white/50">
-                      <span>👤 {survey.creator_email?.split('@')[0] || '未知'}</span>
+                      <span>👤 {survey.creator_name || '未知用户'}</span>
                       <span>📅 完成于 {formatDate(survey.completed_at)}</span>
                     </div>
                   </div>

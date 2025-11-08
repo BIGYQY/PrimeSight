@@ -196,6 +196,7 @@ export default function FillSurveyPage() {
         survey_id: surveyId,
         question_id: question.id,
         user_id: user.id,
+        user_email: user.email,
         answer: answers[question.id],
       }));
 

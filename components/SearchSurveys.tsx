@@ -11,7 +11,7 @@ interface Survey {
   created_at: string;
   creator_id: string;
   is_private: boolean;
-  creator_email?: string;
+  creator_name?: string;
   question_count?: number;
   response_count?: number;
 }
@@ -45,7 +45,24 @@ export default function SearchSurveys() {
           return;
         }
 
-        // 2. 为每个问卷获取题目数和填写人数
+        // 2. 获取所有创建者的 profiles
+        const creatorIds = [...new Set(surveysData?.map(s => s.creator_id) || [])];
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', creatorIds);
+
+        if (profilesError) {
+          console.error('获取 profiles 失败:', profilesError);
+        }
+
+        // 创建 creatorId -> displayName 的映射
+        const profilesMap: Record<string, string> = {};
+        (profilesData || []).forEach(profile => {
+          profilesMap[profile.user_id] = profile.display_name;
+        });
+
+        // 3. 为每个问卷获取题目数和填写人数
         const surveysWithStats = await Promise.all(
           (surveysData || []).map(async (survey) => {
             // 获取题目数
@@ -66,7 +83,7 @@ export default function SearchSurveys() {
               ...survey,
               question_count: questionCount || 0,
               response_count: uniqueUsers.size,
-              creator_email: survey.creator_email || '未知用户',
+              creator_name: profilesMap[survey.creator_id] || '未知用户',
             };
           })
         );
@@ -210,7 +227,7 @@ export default function SearchSurveys() {
                   <div className="flex items-center gap-4 mb-4 text-white/50 text-sm flex-wrap">
                     <div className="flex items-center gap-1">
                       <span>👤</span>
-                      <span>{survey.creator_email?.split('@')[0] || '未知'}</span>
+                      <span>{survey.creator_name || '未知用户'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span>📝</span>

@@ -10,6 +10,11 @@ interface SidebarProps {
   setActiveNav: (nav: string) => void;
 }
 
+interface Profile {
+  display_name: string;
+  avatar_url: string | null;
+}
+
 export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
   const router = useRouter();
 
@@ -17,25 +22,56 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
   const [showUserCard, setShowUserCard] = useState(false);
   // 真实的用户数据（从 Supabase 获取）
   const [user, setUser] = useState<User | null>(null);
+  // 用户 profile 数据
+  const [profile, setProfile] = useState<Profile | null>(null);
   // 加载状态
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * 获取当前登录的用户信息
+   * 获取当前登录的用户信息和 profile
    */
   useEffect(() => {
-    // 获取当前用户
-    const getUser = async () => {
+    // 获取当前用户和 profile
+    const getUserAndProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      if (user) {
+        // 获取用户 profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+      }
+
       setIsLoading(false);
     };
 
-    getUser();
+    getUserAndProfile();
 
     // 监听登录状态变化
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        // 重新获取 profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+      } else {
+        setProfile(null);
+      }
     });
 
     // 清理监听器
@@ -120,18 +156,26 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
             onClick={() => setShowUserCard(!showUserCard)}
             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-all duration-300 group"
           >
-            {/* 用户头像 - 用邮箱首字母 */}
+            {/* 用户头像 */}
             <div className="relative">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-blue-500 group-hover:border-purple-500 transition-all bg-gradient-to-br ${getAvatarColor(user.email!)}`}>
-                {getAvatarText(user.email!)}
-              </div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="头像"
+                  className="w-12 h-12 rounded-full object-cover shadow-lg border-2 border-blue-500 group-hover:border-purple-500 transition-all"
+                />
+              ) : (
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-2 border-blue-500 group-hover:border-purple-500 transition-all bg-gradient-to-br ${getAvatarColor(user.email!)}`}>
+                  {getAvatarText(user.email!)}
+                </div>
+              )}
               {/* 在线状态指示器 */}
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"></div>
             </div>
 
-            {/* 用户邮箱 */}
+            {/* 用户昵称 */}
             <div className="flex-1 text-left overflow-hidden">
-              <p className="text-white font-semibold text-sm truncate">{user.email}</p>
+              <p className="text-white font-semibold text-sm truncate">{profile?.display_name || user.email}</p>
               <p className="text-white/50 text-xs">在线</p>
             </div>
 
@@ -151,11 +195,19 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
               <div className="p-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-white/10">
                 <div className="flex items-center gap-4">
                   {/* 大一点的头像 */}
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg border-2 border-blue-500 bg-gradient-to-br ${getAvatarColor(user.email!)}`}>
-                    {getAvatarText(user.email!)}
-                  </div>
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="头像"
+                      className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-blue-500"
+                    />
+                  ) : (
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg border-2 border-blue-500 bg-gradient-to-br ${getAvatarColor(user.email!)}`}>
+                      {getAvatarText(user.email!)}
+                    </div>
+                  )}
                   <div className="flex-1 overflow-hidden">
-                    <h3 className="text-white font-bold text-lg truncate">{user.email}</h3>
+                    <h3 className="text-white font-bold text-lg truncate">{profile?.display_name || user.email}</h3>
                     <p className="text-white/60 text-sm">PrimeSight 用户</p>
                   </div>
                 </div>
@@ -163,7 +215,10 @@ export default function Sidebar({ activeNav, setActiveNav }: SidebarProps) {
 
               {/* 卡片内容 */}
               <div className="p-4 space-y-2">
-                <button className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3">
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="w-full px-4 py-3 text-left text-white/80 hover:bg-white/10 rounded-lg transition-all flex items-center gap-3"
+                >
                   <span className="text-xl">👤</span>
                   <span>个人资料</span>
                 </button>
