@@ -151,7 +151,7 @@ export default function MySurveys() {
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="text-8xl mb-6">📋</div>
             <h2 className="text-2xl font-bold text-white mb-3">还没有问卷</h2>
-            <p className="text-white/60 mb-6">点击右上角的"发布问卷"按钮创建你的第一个问卷吧！</p>
+            <p className="text-white/60 mb-6">点击右上角的「发布问卷」按钮创建你的第一个问卷吧！</p>
             <button
               onClick={handleCreateSurvey}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold"

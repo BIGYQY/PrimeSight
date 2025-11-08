@@ -452,7 +452,7 @@ export default function SurveyStatsPage() {
                     <div className="space-y-2">
                       {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].map(score => {
                         const count = currentStats.stats.ratingCounts[score] || 0;
-                        const maxCount = Math.max(...Object.values(currentStats.stats.ratingCounts));
+                        const maxCount = Math.max(...Object.values(currentStats.stats.ratingCounts) as number[]);
                         const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
 
                         return (
