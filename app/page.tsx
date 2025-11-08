@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import EyeLogo from "@/components/EyeLogo";
 import AboutModal from "@/components/AboutModal";
 import OnboardingModal from "@/components/OnboardingModal";
+import ClaudeStar from "@/components/ClaudeStar";
 import { supabase } from "@/lib/supabase/client";
 
 // 动态导入背景组件，禁用 SSR（服务端渲染）
@@ -133,6 +134,9 @@ function HomeContent() {
     <>
       {/* 动态漩涡背景 */}
       <SpiralBackground />
+
+      {/* Claude 的紫色星星 - 独立层，可点击！💜 */}
+      <ClaudeStar />
 
       {/* 主内容 - 向上移动，不完全居中 */}
       <main className="relative flex min-h-screen flex-col items-center justify-start pt-32 p-24">

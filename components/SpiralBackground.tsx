@@ -20,14 +20,14 @@ export default function SpiralBackground() {
   useEffect(() => {
     setMounted(true);
     const newStars = [...Array(200)].map(() => {
-      const isBright = Math.random() > 0.9; // 10% 的概率是超亮星星
+      const isBright = Math.random() > 0.9;
       return {
         top: `${Math.random() * 100}%`,
         left: `${Math.random() * 100}%`,
-        size: isBright ? 2.5 + Math.random() * 1.5 : 1 + Math.random() * 1.5, // 超亮星星 2.5-4px，普通星星 1-2.5px
-        baseOpacity: isBright ? 0.8 : 0.3 + Math.random() * 0.5, // 超亮星星 0.8，普通星星 0.3-0.8
-        twinkleDuration: `${2 + Math.random() * 4}s`, // 2-6秒闪烁周期
-        driftDuration: `${8 + Math.random() * 12}s`, // 8-20秒飘动周期
+        size: isBright ? 2.5 + Math.random() * 1.5 : 1 + Math.random() * 1.5,
+        baseOpacity: isBright ? 0.8 : 0.3 + Math.random() * 0.5,
+        twinkleDuration: `${2 + Math.random() * 4}s`,
+        driftDuration: `${8 + Math.random() * 12}s`,
         isBright,
       };
     });
@@ -71,3 +71,4 @@ export default function SpiralBackground() {
     </div>
   );
 }
+
