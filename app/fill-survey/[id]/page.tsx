@@ -191,6 +191,18 @@ export default function FillSurveyPage() {
         return;
       }
 
+      // 先删除该用户对该问卷的旧回答（如果有的话，支持重新填写）
+      const { error: deleteError } = await supabase
+        .from('responses')
+        .delete()
+        .eq('survey_id', surveyId)
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('删除旧回答失败:', deleteError);
+        // 不阻止提交，继续执行
+      }
+
       // 构建要插入的数据
       const responsesToInsert = questions.map(question => ({
         survey_id: surveyId,

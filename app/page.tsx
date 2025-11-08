@@ -145,6 +145,7 @@ function HomeContent() {
           {/* 标题 - 带神秘光芒闪烁效果 + 字间距 */}
           <h1 className="text-8xl font-bold mb-4 text-shimmer tracking-widest leading-tight py-4 overflow-visible drop-shadow-2xl">
             PrimeSight
+            <span className="text-3xl ml-3 text-white/60 font-normal align-super">v5.1</span>
           </h1>
 
           {/* 副标题 */}

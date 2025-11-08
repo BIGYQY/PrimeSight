@@ -21,6 +21,8 @@ const config: Config = {
         'spin-reverse': 'spin-reverse 15s linear infinite',  // 反向旋转（15秒一圈）
         'spin-fast': 'spin 8s linear infinite',       // 快速旋转（8秒一圈）
         'float': 'float 6s ease-in-out infinite',     // 漂浮动画
+        'twinkle': 'twinkle 3s ease-in-out infinite', // 星星闪烁动画
+        'drift': 'drift 8s ease-in-out infinite',     // 星星飘动动画
       },
       // 自定义关键帧动画
       keyframes: {
@@ -36,6 +38,30 @@ const config: Config = {
           '50%': {
             transform: 'translateY(-20px) translateX(10px)',
             opacity: '0.5'
+          },
+        },
+        'twinkle': {
+          '0%, 100%': {
+            opacity: '0.2',
+            filter: 'brightness(1)',
+          },
+          '50%': {
+            opacity: '1',
+            filter: 'brightness(1.5)',
+          },
+        },
+        'drift': {
+          '0%, 100%': {
+            transform: 'translate(0px, 0px)',
+          },
+          '25%': {
+            transform: 'translate(15px, -15px)',
+          },
+          '50%': {
+            transform: 'translate(-10px, 10px)',
+          },
+          '75%': {
+            transform: 'translate(10px, 20px)',
           },
         },
       },

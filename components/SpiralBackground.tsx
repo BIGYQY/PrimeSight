@@ -3,72 +3,71 @@
 import { useEffect, useState } from "react";
 
 export default function SpiralBackground() {
-  // 存储粒子数据，初始为空数组
-  const [particles, setParticles] = useState<Array<{
+  const [mounted, setMounted] = useState(false);
+
+  // 星星数据
+  const [stars, setStars] = useState<Array<{
     top: string;
     left: string;
-    delay: string;
-    duration: string;
+    size: number;
+    baseOpacity: number;
+    twinkleDuration: string;
+    driftDuration: string;
+    isBright: boolean;
   }>>([]);
 
-  // 只在客户端生成粒子
+  // 生成星星
   useEffect(() => {
-    const newParticles = [...Array(30)].map(() => ({
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 5}s`,
-      duration: `${3 + Math.random() * 4}s`,
-    }));
-    setParticles(newParticles);
-  }, []); // 空依赖数组，只执行一次
+    setMounted(true);
+    const newStars = [...Array(200)].map(() => {
+      const isBright = Math.random() > 0.9; // 10% 的概率是超亮星星
+      return {
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        size: isBright ? 2.5 + Math.random() * 1.5 : 1 + Math.random() * 1.5, // 超亮星星 2.5-4px，普通星星 1-2.5px
+        baseOpacity: isBright ? 0.8 : 0.3 + Math.random() * 0.5, // 超亮星星 0.8，普通星星 0.3-0.8
+        twinkleDuration: `${2 + Math.random() * 4}s`, // 2-6秒闪烁周期
+        driftDuration: `${8 + Math.random() * 12}s`, // 8-20秒飘动周期
+        isBright,
+      };
+    });
+    setStars(newStars);
+  }, []);
+
+  if (!mounted) {
+    return <div className="fixed inset-0 -z-10 overflow-hidden bg-black" />;
+  }
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-900">
-      {/* 主漩涡 - 蓝紫色 */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]">
-        <div className="absolute inset-0 rounded-full bg-gradient-radial from-blue-500/30 via-purple-600/20 to-transparent animate-spin-slow blur-3xl"></div>
-      </div>
-
-      {/* 第二层漩涡 - 反向旋转 */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]">
-        <div className="absolute inset-0 rounded-full bg-gradient-radial from-purple-500/30 via-blue-600/20 to-transparent animate-spin-reverse blur-2xl"></div>
-      </div>
-
-      {/* 第三层漩涡 - 快速旋转 */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px]">
-        <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 via-indigo-500/30 to-transparent animate-spin-fast blur-xl"></div>
-      </div>
-
-      {/* 漩涡臂 - 创造螺旋效果 */}
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-black">
+      {/* 星星 - 会闪烁移动 */}
       <div className="absolute inset-0">
-        {/* 臂 1 */}
-        <div className="absolute top-1/2 left-1/2 w-[600px] h-[2px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent -translate-x-1/2 -translate-y-1/2 origin-left animate-spin-slow"></div>
-
-        {/* 臂 2 */}
-        <div className="absolute top-1/2 left-1/2 w-[500px] h-[2px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent -translate-x-1/2 -translate-y-1/2 origin-left animate-spin-reverse rotate-60"></div>
-
-        {/* 臂 3 */}
-        <div className="absolute top-1/2 left-1/2 w-[450px] h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent -translate-x-1/2 -translate-y-1/2 origin-left animate-spin-fast rotate-120"></div>
-      </div>
-
-      {/* 粒子效果 - 只在客户端渲染 */}
-      <div className="absolute inset-0">
-        {particles.map((particle, i) => (
+        {stars.map((star, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-white rounded-full opacity-20 animate-float"
+            className="absolute animate-drift"
             style={{
-              top: particle.top,
-              left: particle.left,
-              animationDelay: particle.delay,
-              animationDuration: particle.duration,
+              top: star.top,
+              left: star.left,
+              animationDuration: star.driftDuration,
+              animationDelay: `${Math.random() * 5}s`,
             }}
-          />
+          >
+            <div
+              className={`bg-white rounded-full animate-twinkle ${
+                star.isBright ? "shadow-[0_0_6px_rgba(255,255,255,0.6)]" : ""
+              }`}
+              style={{
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.baseOpacity,
+                animationDuration: star.twinkleDuration,
+                animationDelay: `${Math.random() * 3}s`,
+              }}
+            />
+          </div>
         ))}
       </div>
-
-      {/* 半透明遮罩 - 让文字更清晰 */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-transparent to-slate-900/70"></div>
     </div>
   );
 }

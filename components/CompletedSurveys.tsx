@@ -40,6 +40,8 @@ export default function CompletedSurveys() {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
+        console.log('获取到的填写记录:', responsesData);
+
         if (responsesError) {
           console.error('获取填写记录失败:', responsesError);
           setIsLoading(false);
@@ -62,10 +64,15 @@ export default function CompletedSurveys() {
         }
 
         const surveyIds = Array.from(uniqueSurveyIds.keys());
+        console.log('去重后的问卷 IDs:', surveyIds);
+
         const { data: surveysData, error: surveysError } = await supabase
           .from('surveys')
           .select('*')
           .in('id', surveyIds);
+
+        console.log('获取到的问卷数据:', surveysData);
+        console.log('获取问卷错误:', surveysError);
 
         if (surveysError) {
           console.error('获取问卷信息失败:', surveysError);
@@ -129,8 +136,14 @@ export default function CompletedSurveys() {
    * 查看我的回答
    */
   const handleViewMyAnswers = (surveyId: string) => {
-    // TODO: 跳转到查看回答页面（之后实现）
-    alert('查看回答功能开发中...');
+    router.push(`/my-answers/${surveyId}`);
+  };
+
+  /**
+   * 重新填写问卷
+   */
+  const handleRefill = (surveyId: string) => {
+    router.push(`/fill-survey/${surveyId}`);
   };
 
   if (isLoading) {
@@ -204,7 +217,13 @@ export default function CompletedSurveys() {
                       onClick={() => handleViewMyAnswers(survey.id)}
                       className="px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-all border border-blue-500/30"
                     >
-                      查看回答
+                      📝 查看回答
+                    </button>
+                    <button
+                      onClick={() => handleRefill(survey.id)}
+                      className="px-4 py-2 bg-purple-600/20 text-purple-400 rounded-lg hover:bg-purple-600/30 transition-all border border-purple-500/30"
+                    >
+                      🔄 重新填写
                     </button>
                   </div>
                 </div>
