@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 // 题目类型定义
@@ -24,18 +24,16 @@ const QUESTION_TYPES = [
   { id: 'text', label: '填写题', icon: '📝', color: 'purple' },
 ];
 
-export default function CreateSurveyPage() {
+export default function EditSurveyPage() {
   const router = useRouter();
+  const params = useParams();
+  const surveyId = params.id as string;
+
+  // 加载状态
+  const [isLoading, setIsLoading] = useState(true);
 
   // 题目列表
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      id: '1',
-      questionText: '',
-      questionType: 'single_choice',
-      options: ['选项 A', '选项 B'],
-    },
-  ]);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   // 当前编辑的题目索引
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -61,6 +59,81 @@ export default function CreateSurveyPage() {
   const [isPublishing, setIsPublishing] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  /**
+   * 加载问卷数据
+   */
+  useEffect(() => {
+    const loadSurveyData = async () => {
+      try {
+        // 1. 获取问卷信息
+        const { data: surveyData, error: surveyError } = await supabase
+          .from('surveys')
+          .select('*')
+          .eq('id', surveyId)
+          .single();
+
+        if (surveyError || !surveyData) {
+          alert('问卷不存在！');
+          router.push('/dashboard');
+          return;
+        }
+
+        // 检查是否是创建者
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id !== surveyData.creator_id) {
+          alert('你没有权限编辑这个问卷！');
+          router.push('/dashboard');
+          return;
+        }
+
+        // 设置问卷信息
+        setPublishInfo({
+          title: surveyData.title,
+          description: surveyData.description || '',
+          isPrivate: surveyData.is_private,
+          password: surveyData.password || '',
+        });
+
+        // 2. 获取所有题目
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('survey_id', surveyId)
+          .order('order', { ascending: true });
+
+        if (questionsError) {
+          console.error('获取题目失败:', questionsError);
+          alert('加载失败，请重试！');
+          return;
+        }
+
+        // 转换题目格式
+        const loadedQuestions = (questionsData || []).map((q) => ({
+          id: q.id,
+          questionText: q.question_text,
+          questionType: q.question_type as QuestionType,
+          options: q.options || [],
+        }));
+
+        setQuestions(loadedQuestions.length > 0 ? loadedQuestions : [
+          {
+            id: '1',
+            questionText: '',
+            questionType: 'single_choice',
+            options: ['选项 A', '选项 B'],
+          },
+        ]);
+      } catch (err) {
+        console.error('加载问卷失败:', err);
+        alert('加载失败，请重试！');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSurveyData();
+  }, [surveyId, router]);
 
   /**
    * 添加题目
@@ -172,7 +245,7 @@ export default function CreateSurveyPage() {
   };
 
   /**
-   * 发布问卷到 Supabase
+   * 更新问卷到 Supabase
    */
   const handlePublish = async () => {
     // 验证必填项
@@ -187,7 +260,7 @@ export default function CreateSurveyPage() {
 
     // 验证至少有一个题目且题目内容不为空
     if (questions.length === 0) {
-      alert('至少需要一个题目才能发布！');
+      alert('至少需要一个题目才能保存！');
       return;
     }
     const hasEmptyQuestion = questions.some(q => !q.questionText.trim());
@@ -199,38 +272,40 @@ export default function CreateSurveyPage() {
     setIsPublishing(true);
 
     try {
-      // 1. 获取当前用户
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('请先登录！');
-        setIsPublishing(false);
-        return;
-      }
-
-      // 2. 保存问卷到 surveys 表
-      const { data: survey, error: surveyError } = await supabase
+      // 1. 更新问卷信息
+      const { error: surveyError } = await supabase
         .from('surveys')
-        .insert({
+        .update({
           title: publishInfo.title,
           description: publishInfo.description,
-          creator_id: user.id,
-          creator_email: user.email,
           is_private: publishInfo.isPrivate,
           password: publishInfo.isPrivate ? publishInfo.password : null,
         })
-        .select()
-        .single();
+        .eq('id', surveyId);
 
       if (surveyError) {
-        console.error('保存问卷失败:', surveyError);
-        alert(`发布失败：${surveyError.message}`);
+        console.error('更新问卷失败:', surveyError);
+        alert(`保存失败：${surveyError.message}`);
         setIsPublishing(false);
         return;
       }
 
-      // 3. 保存所有题目到 questions 表
+      // 2. 删除旧的题目
+      const { error: deleteError } = await supabase
+        .from('questions')
+        .delete()
+        .eq('survey_id', surveyId);
+
+      if (deleteError) {
+        console.error('删除旧题目失败:', deleteError);
+        alert(`保存失败：${deleteError.message}`);
+        setIsPublishing(false);
+        return;
+      }
+
+      // 3. 插入新题目
       const questionsToInsert = questions.map((question, index) => ({
-        survey_id: survey.id,
+        survey_id: surveyId,
         question_text: question.questionText,
         question_type: question.questionType,
         options: question.options.length > 0 ? question.options : null,
@@ -243,17 +318,17 @@ export default function CreateSurveyPage() {
 
       if (questionsError) {
         console.error('保存题目失败:', questionsError);
-        alert(`发布失败：${questionsError.message}`);
+        alert(`保存失败：${questionsError.message}`);
         setIsPublishing(false);
         return;
       }
 
-      // 4. 发布成功
-      alert('🎉 问卷发布成功！');
+      // 4. 保存成功
+      alert('✅ 问卷已更新！');
       router.push('/dashboard');
     } catch (err) {
-      console.error('发布过程出错:', err);
-      alert('发布失败，请重试！');
+      console.error('更新过程出错:', err);
+      alert('保存失败，请重试！');
       setIsPublishing(false);
     }
   };
@@ -264,6 +339,18 @@ export default function CreateSurveyPage() {
   const getTypeConfig = (type: QuestionType) => {
     return QUESTION_TYPES.find(t => t.id === type)!;
   };
+
+  // 加载中
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/70">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-900">
@@ -430,7 +517,7 @@ export default function CreateSurveyPage() {
           </div>
         </div>
 
-        {/* 底部操作栏 - 保存和发布按钮 */}
+        {/* 底部操作栏 - 保存和更新按钮 */}
         <div className="p-4 flex justify-end gap-3">
           <button
             onClick={handleSaveAndExit}
@@ -442,7 +529,7 @@ export default function CreateSurveyPage() {
             onClick={() => setShowPublishModal(true)}
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all font-semibold shadow-lg"
           >
-            🚀 发布问卷
+            ✅ 保存问卷
           </button>
         </div>
       </main>
@@ -543,11 +630,11 @@ export default function CreateSurveyPage() {
         </div>
       )}
 
-      {/* 发布问卷弹窗 - 紧凑版 */}
+      {/* 保存问卷弹窗 - 紧凑版 */}
       {showPublishModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowPublishModal(false)}>
           <div className="bg-slate-800 rounded-xl p-6 max-w-lg w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-white mb-4">发布问卷</h2>
+            <h2 className="text-xl font-bold text-white mb-4">保存问卷</h2>
 
             {/* 问卷标题 */}
             <div className="mb-4">
@@ -636,10 +723,10 @@ export default function CreateSurveyPage() {
                 {isPublishing ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    发布中...
+                    保存中...
                   </>
                 ) : (
-                  '确认发布'
+                  '确认保存'
                 )}
               </button>
             </div>

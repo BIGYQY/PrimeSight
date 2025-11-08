@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import SearchSurveys from "@/components/SearchSurveys";
 import MySurveys from "@/components/MySurveys";
+import CompletedSurveys from "@/components/CompletedSurveys";
 
 export default function DashboardPage() {
   // 当前激活的导航项 - 默认显示"我的问卷"
@@ -20,12 +21,7 @@ export default function DashboardPage() {
 
         {activeNav === "search" && <SearchSurveys />}
 
-        {activeNav === "completed" && (
-          <div className="p-8">
-            <h1 className="text-4xl font-bold text-white mb-8">完成的问卷</h1>
-            <div className="text-white/60">正在开发中...</div>
-          </div>
-        )}
+        {activeNav === "completed" && <CompletedSurveys />}
 
         {activeNav === "support" && (
           <div className="p-8">
